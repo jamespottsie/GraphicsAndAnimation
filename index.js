@@ -13,7 +13,7 @@ var turnAmount = 0.0;
 function createWorld() {
   scene = new THREE.Scene();
   world = new CANNON.World();
-  world.gravity.set(0, -1, 0); // m/s²
+  world.gravity.set(0, -1.2, 0); // m/s²
 
   birdBody = new CANNON.Body({
     mass: 1, // kg
@@ -32,12 +32,12 @@ function createWorld() {
   camera.position.set(0, 1, 6);
   camera.rotation.x = -0.1;
 
-  const textureLoader = new THREE.TextureLoader();
+  /* const textureLoader = new THREE.TextureLoader();
   const texture = textureLoader.load("Assets/mars.png", () => {
     const rt = new THREE.WebGLCubeRenderTarget(texture.image.height);
     rt.fromEquirectangularTexture(renderer, texture);
     scene.background = rt;
-  });
+  }); */
 
   var light;
   light = new THREE.DirectionalLight();
@@ -133,7 +133,7 @@ function birdTurn(turnSpeed) {
   zRot = lerp(zRot, 0.012 * turnSpeed, 0.035);
   //xSpeed = clamp(xSpeed, -0.01, 0.01);
   if (
-    Math.abs(birdBody.position.x) > 1.5 && //1 is the boundary
+    Math.abs(birdBody.position.x) > 1.7 && //1 is the boundary
     ((xSpeed < 0 && birdBody.position.x < 0) ||
       (xSpeed > 0 && birdBody.position.x > 0))
   )
@@ -156,7 +156,7 @@ function init() {
   try {
     renderer = new THREE.WebGLRenderer({
       antialias: true,
-      alpha: false,
+      alpha: true,
     });
 
     renderer.setSize(window.innerWidth, window.innerHeight);
