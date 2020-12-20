@@ -11,6 +11,7 @@ var turnAmount = 0.0;
 var rings = [];
 var ringParent;
 let score = 0;
+let lives = 3;
 
 //#region WORLD SETUP
 function createWorld() {
@@ -95,12 +96,23 @@ function moveLanes() {
   var wpVector = new THREE.Vector3();
   for (var i = 0; i < rings.length; i += 3) {
     rings[i].getWorldPosition(wpVector);
-    if (wpVector.z > 16) {
+    if (wpVector.z > 6) {
       rings[i].position.z -= 160;
       rings[i + 1].position.z -= 160;
       rings[i + 2].position.z -= 160;
+
+      if (
+        //if any visible -1 life
+        rings[i].visible === true ||
+        rings[i + 1].visible === true ||
+        rings[i + 2].visible === true
+      ) {
+        console.log("lost life!");
+        lives--;
+        if (lives <= 0) console.log("DEAD");
+      }
+
       varyLane(i / 3);
-      //if any visible -1 life
     }
   }
 
@@ -115,6 +127,7 @@ function collectRing(ring) {
   score++;
   console.log(score);
   rings[ring].visible = false;
+  if (lives < 3) lives++;
 }
 //UPDATE
 function updateForFrame() {
