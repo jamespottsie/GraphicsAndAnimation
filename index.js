@@ -8,6 +8,9 @@ var frameNumber;
 
 var flap = false;
 var turnAmount = 0.0;
+var rings = [];
+var ringParent;
+let score = 0;
 
 //#region WORLD SETUP
 function createWorld() {
@@ -54,11 +57,69 @@ function createWorld() {
     scene.add(gltf.scene);
     bird.rotation.y = 3.14;
   });
+
+  ringParent = new THREE.Group();
+  ringParent.position.z = -10;
+  ringParent.position.y = 2;
+
+  var geoRingArray = [];
+  var matRingArray = [];
+  const ringCount = 30;
+  for (var i = 0; i < ringCount; i++) {
+    geoRingArray.push(new THREE.TorusGeometry(0.2, 0.06, 16, 100));
+    matRingArray.push(
+      new THREE.MeshPhongMaterial({
+        color: 0xffffff,
+      })
+    );
+    rings.push(new THREE.Mesh(geoRingArray[i], matRingArray[i]));
+    ringParent.add(rings[i]);
+    rings[i].position.x = (i % 3) * -1.3 + 1.3;
+    rings[i].position.y = Math.round(Math.random() * 3) * -0.6 - 0.5;
+    rings[i].position.z = Math.floor(i / 3) * -16;
+  }
+  for (var lane = 0; lane < 10; lane++) varyLane(lane);
+  console.log(rings.length);
+  scene.add(ringParent);
 }
 //#endregion
 
+function varyLane(laneIndex) {
+  let x = Math.round(Math.random() * 4);
+  for (var i = 0; i < 3; i++) {
+    rings[laneIndex * 3 + i].visible = i == x - 1;
+  }
+}
+function moveLanes() {
+  ringParent.position.z += 0.1;
+  var wpVector = new THREE.Vector3();
+  for (var i = 0; i < rings.length; i += 3) {
+    rings[i].getWorldPosition(wpVector);
+    if (wpVector.z > 16) {
+      rings[i].position.z -= 160;
+      rings[i + 1].position.z -= 160;
+      rings[i + 2].position.z -= 160;
+      varyLane(i / 3);
+      //if any visible -1 life
+    }
+  }
+
+  for (var i = 0; i < rings.length; i++) {
+    if (rings[i].visible) {
+      wpVector = rings[i].getWorldPosition(wpVector);
+      if (wpVector.distanceTo(birdBody.position) < 0.5) collectRing(i);
+    }
+  }
+}
+function collectRing(ring) {
+  score++;
+  console.log(score);
+  rings[ring].visible = false;
+}
 //UPDATE
 function updateForFrame() {
+  moveLanes();
+
   if (birdBody.position.y < 1.2 && flap) flapBird(1);
 
   birdTurn(turnAmount);
