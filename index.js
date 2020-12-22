@@ -1,4 +1,5 @@
 ("use strict");
+
 var canvas, renderer, scene, camera; // Standard three.js requirements.
 var bird, birdBody;
 var world;
