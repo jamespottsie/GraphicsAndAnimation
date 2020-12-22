@@ -4,22 +4,155 @@
 <head>
     <meta charset="utf-8" />
     <title>My first three.js app</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P" rel="stylesheet">
     <style>
         body {
             margin: 0;
-            background-color: #68cfca;
+            font-family: 'Press Start 2P';
+            user-select: none;
+            background: lightblue;
+        }
+
+        .fullsize {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .centered {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .title {
+            font-size: 3.5em;
+            margin-bottom: 2rem;
+        }
+
+        .title, .text {
+            color: #fff;
+            text-shadow: 0 5px #000, -2px 0 #000, 2px 0 #000, 0 -2px #000, -2px 5px #000, 2px 5px #000, 2px -2px #000, -2px -2px #000;
+        }
+
+        .desc {
+            font-size: 1.25em;
+            margin-bottom: 4rem;
+            background: #000;
+            color: #fff;
+            padding: 0.5em;
+        }
+
+        .float {
+            animation: float 3s infinite ease-in-out;
+        }
+
+        .btn {
+            background: #000;
+            color: #fff;
+            font-size: 1.5em;
+            padding: 0.6em;
+            border-radius: 0.3em;
+            margin: 0.25em 0;
+            cursor: pointer;
+            border: 2px solid #000;
+        }
+
+        .btn:active {
+            background: #fff;
+            color: #000;
+        }
+
+        .spinner {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 20px solid #fff;
+            border-top-color: #000;
+            box-shadow: 0 0 0 2px #000, inset 0 0 0 2px #000;
+            animation: spin 0.25s infinite;
+        }
+
+        #scoreHud {
+            position: absolute;
+            left: 50%;
+            bottom: 3rem;
+            transform: translate(-50%, 0);
+            font-size: 3em;
+            color: #fff;
+        }
+
+        #mainTitle {
+            padding-bottom: 1.25em;
+        }
+
+        .slide-down {
+            animation: slide-down 1s ease-out;
+        }
+
+        @keyframes slide-down {
+            0% {
+                transform: translateY(-5em);
+                opacity: 0;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-0.75em);
+            }
+
+            100% {
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
         }
         
-        canvas {
-            display: block;
-            
-            background: url(Assets/farm.png) no-repeat center center;
-            background-size: cover;
-        }
     </style>
 </head>
 
 <body onload="init()">
+    <canvas class="fullsize" id="canvas"></canvas>
+    <div class="fullsize centered slide-down" id="menu" style="display: none;">
+        <div class="title float" id="mainTitle">FloopyBird</div>
+        <div class="btn" id="play">Play</div>
+        <div class="btn" id="github">Github</div>
+    </div>
+    <div class="text" id="scoreHud" style="display: none;">0</div>
+    <div class="fullsize centered slide-down" id="gameOver" style="display: none;">
+        <div class="title">Game Over</div>
+        <div class="desc">Score: <span id="score">0</span></div>
+        <div class="btn" id="playAgain">Play again</div>
+        <div class="btn" id="share">Share</div>
+    </div>
+    <div class="fullsize centered" id="preloader">
+        <div class="spinner"></div>
+    </div>
     <script src="node_modules/three/build/three.min.js"></script>
     <script src="node_modules/three/examples/js/loaders/GLTFLoader.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.7/dat.gui.min.js"></script>

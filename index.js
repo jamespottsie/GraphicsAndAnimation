@@ -19,12 +19,37 @@ const RAIN_AREA_X = 10;
 const RAIN_AREA_Y = 14;
 const RAIN_AREA_Z = 50;
 const GROUND_Y = - 3;
+const SMOKE_PARTICLE_COUNT = 30;
 
 // MY CODE
 let guiObject, gui;
 let rainParticles, clouds;
 
+let currentState;
 
+const states = {
+  MENU: 0,
+  PLAY: 1,
+  SCORE: 2
+};
+
+// Buttons
+let playEl;
+let githubEl;
+let playAgainEl;
+
+// Score elements
+let scoreEl;
+let scoreHudEl;
+
+// State screen elements
+let preloaderEl;
+let menuEl;
+let gameOverEl;
+
+let smokeGeometry;
+let smokeMaterial;
+let smokeParticles;
 
 //#region WORLD SETUP
 function createWorld() {
@@ -34,6 +59,8 @@ function createWorld() {
 
   guiObject = {};
   gui = new dat.GUI();
+
+
 
   createScene();
 
@@ -148,17 +175,32 @@ function collectRing(ring) {
   console.log(score);
   rings[ring].visible = false;
   if (lives < 3) lives++;
+  new Audio( 'Assets/point.mp3' ).play();
 }
 //UPDATE
 function updateForFrame() {
-  moveLanes();
 
-  if (birdBody.position.y < 1.2 && flap) flapBird(1);
+  if ( currentState === states.PLAY ) {
+  
+    moveLanes();
 
-  birdTurn(turnAmount);
+    if (birdBody.position.y < 1.2 && flap) flapBird(1);
+
+    birdTurn(turnAmount);
+
+  }
+
   //-1 is the boundary
-  if (birdBody.position.y < -1.0 && birdBody.velocity.y < 0)
+  if (birdBody.position.y < -1.0 && birdBody.velocity.y < 0) {
     birdBody.position.y = -1.0;
+
+    if ( currentState === states.PLAY ) {
+
+      die();
+
+    }
+
+  }
 
   bird.position.x = birdBody.position.x;
   bird.position.y = birdBody.position.y;
@@ -173,15 +215,24 @@ function doFrame() {
 
   renderer.render(scene, camera);
   requestAnimationFrame(doFrame);
-  world.step(timeStep);
+
+  if ( currentState === states.PLAY ) {
+
+    world.step(timeStep);
+
+  }
 }
 
 function updateScene() {
 
-  groundTexture.offset.y += 0.02;
+  if ( currentState !== states.SCORE ) {
+
+    groundTexture.offset.y += 0.02;
+
+  }
 
   const objectMoveSpeed = 0.05;
-/*
+
   // updates the smoke particles
   for ( let i = 0; i < smokeParticles.children.length; i ++ ) {
 
@@ -192,7 +243,7 @@ function updateScene() {
     particle.position.y += particle.scale.x * 0.2;
 
   }
-*/
+
   // updates the rain particles
   for ( let i = 0; i < rainParticles.children.length; i ++ ) {
 
@@ -364,6 +415,104 @@ function createScene() {
 
   }
 
+  // smoke geometry and material
+  smokeGeometry = new THREE.SphereBufferGeometry();
+  smokeMaterial = new THREE.MeshLambertMaterial( {
+    color: 'white'
+  } );
+
+  // wrapper object for smoke particles
+  smokeParticles = new THREE.Object3D();
+  scene.add( smokeParticles );
+
+  // get the preloader element and hide it
+  preloaderEl = document.getElementById( 'preloader' );
+  preloaderEl.style.display = 'none';
+
+  // show the menu element
+  menuEl = document.getElementById( 'menu' );
+  menuEl.style.display = '';
+
+  // get other elements
+  gameOverEl = document.getElementById( 'gameOver' );
+
+  playEl = document.getElementById( 'play' );
+  githubEl = document.getElementById( 'github' );
+  playAgainEl = document.getElementById( 'playAgain' );
+
+  scoreEl = document.getElementById( 'score' );
+  scoreHudEl = document.getElementById( 'scoreHud' );
+
+  // add event listeners to the buttons
+
+  playEl.onclick = function () {
+
+    // hide the appropiate elements and start the game
+    menuEl.style.display = 'none';
+    scoreHudEl.style.display = '';
+    scoreHudEl.innerHTML = score;
+
+    currentState = states.PLAY;
+
+  }
+
+  githubEl.onclick = function () {
+
+    // open github link
+    window.open( 'https://github.com/bytezeroseven', '_open' );
+
+  }
+
+  playAgainEl.onclick = function () {
+
+    // update UI
+    menuEl.style.display = '';
+    gameOverEl.style.display = 'none';
+
+    // reset game state
+    currentState = states.MENU;
+    birdBody.position.y = 0;
+    birdBody.position.x = 0;
+    birdBody.velocity.y = 0;
+    birdBody.rotation.set( 0, 0, 0 );
+    bird.rotation.set( 0, 0, 0 );
+    zRot = 0;
+    xSpeed = 0;
+    turnSpeed = 0;
+
+    // remove the smoke
+    smokeParticles.children.length = 0;
+
+  }
+
+
+}
+
+function die() {
+
+  // update the ui
+  dead = true;
+  currentState = states.SCORE;
+  scoreHudEl.style.display = 'none';
+  gameOverEl.style.display = '';
+  scoreEl.innerHTML = score;
+
+  // play the dead sound
+  new Audio( './Assets/hit.mp3' ).play();
+
+  // all some random smoke particles
+  smokeParticles.position.copy( birdBody.position );
+
+  for ( let i = 0; i < SMOKE_PARTICLE_COUNT; i ++ ) {
+
+    const mesh = new THREE.Mesh( smokeGeometry, smokeMaterial );
+    mesh.scale.setScalar( Math.random() * 0.1 );
+    mesh.position.set( Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5 );
+    mesh.position.multiplyScalar( 0.3 );
+    smokeParticles.add( mesh );
+
+  }
+
 }
 
 function GroundTexture() {
@@ -407,6 +556,7 @@ window.addEventListener("keyup", function (e) {
   switch (e.keyCode) {
     case 32:
       flap = false;
+      new Audio( './Assets/wing.mp3' ).play();
       break;
     case 65:
       if (turnAmount === -1.0) turnAmount = 0;
@@ -464,10 +614,11 @@ function init() {
     renderer = new THREE.WebGLRenderer({
       antialias: true,
       alpha: true,
+      canvas: document.getElementById( 'canvas' )
     });
 
     renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
+
   } catch (e) {
     document.body.innerHTML = "<b>Sorry, an error occurred:<br>" + e + "</b>";
     return;
