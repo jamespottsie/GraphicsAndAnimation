@@ -268,7 +268,7 @@ function updateScene() {
 
   }
 
-  // update clounds
+  // update clouds
 
   for ( let i = 0; i < clouds.children.length; i ++ ) {
 
@@ -459,7 +459,7 @@ function createScene() {
   githubEl.onclick = function () {
 
     // open github link
-    window.open( 'https://github.com/bytezeroseven', '_open' );
+    window.open( 'https://github.com/Nattress98/GraphicsAndAnimation'_open' );
 
   }
 
