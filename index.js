@@ -448,6 +448,7 @@ function createScene() {
     xSpeed = 0;
     turnSpeed = 0;
     score = 0;
+    lives = 3;
 
     // remove the smoke
     smokeParticles.children.length = 0;
