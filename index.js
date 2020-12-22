@@ -150,8 +150,8 @@ function moveLanes() {
         rings[i + 1].visible === true ||
         rings[i + 2].visible === true
       ) {
-        console.log("lost life!");
         lives--;
+        console.log("lost life! " + lives);
         if (lives <= 0 && currentState === states.PLAY) die();
       }
 
