@@ -439,16 +439,17 @@ function createScene() {
 
     // reset game state
     currentState = states.MENU;
-    birdBody.position.y = 0;
+    birdBody.position.set(0, 0, 0);
     birdBody.position.x = 0;
     birdBody.velocity.y = 0;
-    birdBody.rotation.set(0, 0, 0);
-    bird.rotation.set(0, 0, 0);
+
+    bird.rotation.y = 3.14;
     zRot = 0;
     xSpeed = 0;
     turnSpeed = 0;
     score = 0;
     lives = 3;
+    console.log("lives:" + lives);
 
     // remove the smoke
     smokeParticles.children.length = 0;
