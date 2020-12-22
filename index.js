@@ -152,7 +152,7 @@ function moveLanes() {
       ) {
         console.log("lost life!");
         lives--;
-        if (lives <= 0) console.log("DEAD");
+        if (lives <= 0 && currentState === states.PLAY) die();
       }
 
       varyLane(i / 3);
@@ -168,7 +168,7 @@ function moveLanes() {
 }
 function collectRing(ring) {
   score++;
-  console.log(score);
+  scoreHudEl.innerHTML = score;
   rings[ring].visible = false;
   if (lives < 3) lives++;
   new Audio("Assets/point.mp3").play();
@@ -187,9 +187,9 @@ function updateForFrame() {
   if (birdBody.position.y < -1.0 && birdBody.velocity.y < 0) {
     birdBody.position.y = -1.0;
 
-    if (currentState === states.PLAY) {
-      die();
-    }
+    // if (currentState === states.PLAY) {
+    //   die();
+    // }
   }
 
   bird.position.x = birdBody.position.x;
@@ -435,6 +435,7 @@ function createScene() {
     // update UI
     menuEl.style.display = "";
     gameOverEl.style.display = "none";
+    scoreHudEl.innerHTML = "0";
 
     // reset game state
     currentState = states.MENU;
@@ -446,6 +447,7 @@ function createScene() {
     zRot = 0;
     xSpeed = 0;
     turnSpeed = 0;
+    score = 0;
 
     // remove the smoke
     smokeParticles.children.length = 0;
