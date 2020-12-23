@@ -170,7 +170,7 @@ function moveLanes() {
 }
 function collectRing(ring) {
   score++;
-  scoreHudEl.innerHTML = score;
+  console.log(score);
   rings[ring].visible = false;
   if (lives < 3) lives++;
   new Audio("Assets/point.mp3").play();
@@ -217,6 +217,8 @@ function updateScene() {
   if (currentState !== states.SCORE) {
     groundTexture.offset.y += 0.02;
   }
+  
+  scoreHudEl.innerHTML = '<center>' + score + '<br>' + '<3'.repeat( lives ) + '</center>';
 
   const objectMoveSpeed = 0.05;
 
