@@ -1,6 +1,7 @@
 ("use strict");
 
 let canvas, renderer, scene, camera; // Standard three.js requirements.
+var screenShake = ScreenShake();
 let bird, birdBody;
 let world;
 const timeStep = 1.0 / 60.0;
@@ -151,6 +152,7 @@ function moveLanes() {
         rings[i + 2].visible === true
       ) {
         lives--;
+        screenShake.shake(camera, new THREE.Vector3(0.1, 0, 0), 300);
         console.log("lost life! " + lives);
         if (lives <= 0 && currentState === states.PLAY) die();
       }
@@ -202,7 +204,7 @@ function doFrame() {
   if (bird != null) updateForFrame();
 
   updateScene();
-
+  screenShake.update(camera);
   renderer.render(scene, camera);
   requestAnimationFrame(doFrame);
 
