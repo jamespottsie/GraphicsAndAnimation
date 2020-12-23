@@ -186,12 +186,10 @@ function updateForFrame() {
   }
 
   //-1 is the boundary
-  if (birdBody.position.y < -1.0 && birdBody.velocity.y < 0) {
-    birdBody.position.y = -1.0;
-
-    // if (currentState === states.PLAY) {
-    //   die();
-    // }
+  if (currentState === states.PLAY) {
+    if (birdBody.position.y < -1.0 && birdBody.velocity.y < 0) {
+      birdBody.position.y = -1.0;
+    }
   }
 
   bird.position.x = birdBody.position.x;
@@ -207,8 +205,7 @@ function doFrame() {
   screenShake.update(camera);
   renderer.render(scene, camera);
   requestAnimationFrame(doFrame);
-
-  if (currentState === states.PLAY) {
+  if (currentState !== states.MENU) {
     world.step(timeStep);
   }
 }
@@ -217,8 +214,9 @@ function updateScene() {
   if (currentState !== states.SCORE) {
     groundTexture.offset.y += 0.02;
   }
-  
-  scoreHudEl.innerHTML = '<center>' + score + '<br>' + '<3'.repeat( lives ) + '</center>';
+
+  scoreHudEl.innerHTML =
+    "<center>" + score + "<br>" + "<3".repeat(lives) + "</center>";
 
   const objectMoveSpeed = 0.05;
 
