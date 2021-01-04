@@ -82,19 +82,6 @@ function createWorld() {
   camera.position.set(0, 1, 6);
   camera.rotation.x = -0.1;
 
-  /* const textureLoader = new THREE.TextureLoader();
-  const texture = textureLoader.load("Assets/mars.png", () => {
-    const rt = new THREE.WebGLCubeRenderTarget(texture.image.height);
-    rt.fromEquirectangularTexture(renderer, texture);
-    scene.background = rt;
-  }); */
-
-  /*var light;
-  light = new THREE.DirectionalLight();
-  light.position.set(0, 0, 1);
-  camera.add(light);
-  scene.add(camera);*/
-
   //------------------- Visible objects ----------------------
 
   var loader = new THREE.GLTFLoader();
@@ -106,7 +93,7 @@ function createWorld() {
   });
 
   ringParent = new THREE.Group();
-  ringParent.position.z = -10;
+  ringParent.position.z = 0;
   ringParent.position.y = 2;
 
   var geoRingArray = [];
@@ -133,11 +120,12 @@ function createWorld() {
   for (var lane = 0; lane < 10; lane++) varyLane(lane);
   console.log(rings.length);
   scene.add(ringParent);
+  ringParent.position.z = -15;
 }
 //#endregion
 
 function varyLane(laneIndex) {
-  let x = Math.round(Math.random() * 4);
+  let x = Math.round(Math.random() * 3.5);
   for (var i = 0; i < 3; i++) {
     rings[laneIndex * 3 + i].visible = i === x - 1;
   }
@@ -504,7 +492,7 @@ function die() {
   gameOverEl.style.display = "";
   scoreEl.innerHTML = score;
   laneSpeed = 0.1;
-
+  ringParent.position.z -= 15;
   // play the dead sound
   new Audio("./Assets/hit.mp3").play();
 
