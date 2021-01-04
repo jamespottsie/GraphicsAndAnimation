@@ -3,6 +3,8 @@
 let canvas, renderer, scene, camera; // Standard three.js requirements.
 var screenShake = ScreenShake();
 let bird, birdBody;
+let bombSpawned = false;
+let bomb;
 let world;
 const timeStep = 1.0 / 60.0;
 let frameNumber;
@@ -114,7 +116,7 @@ function createWorld() {
     geoRingArray.push(new THREE.TorusGeometry(0.2, 0.06, 16, 100));
     matRingArray.push(
       new THREE.MeshPhongMaterial({
-        color: 0xffffff,
+        color: 0xffd700,
       })
     );
     rings.push(new THREE.Mesh(geoRingArray[i], matRingArray[i]));
@@ -123,6 +125,11 @@ function createWorld() {
     rings[i].position.y = Math.round(Math.random() * 3) * -0.6 - 0.5;
     rings[i].position.z = Math.floor(i / 3) * -16;
   }
+  var bombGeom = new THREE.SphereBufferGeometry(0.2, 32, 32);
+  var bombMat = new THREE.MeshPhongMaterial({ color: 0x191919 });
+  bomb = new THREE.Mesh(bombGeom, bombMat);
+  ringParent.add(bomb);
+  bomb.visible = false;
   for (var lane = 0; lane < 10; lane++) varyLane(lane);
   console.log(rings.length);
   scene.add(ringParent);
@@ -132,11 +139,24 @@ function createWorld() {
 function varyLane(laneIndex) {
   let x = Math.round(Math.random() * 4);
   for (var i = 0; i < 3; i++) {
-    rings[laneIndex * 3 + i].visible = i == x - 1;
+    rings[laneIndex * 3 + i].visible = i === x - 1;
+  }
+  //spawn bomb
+  if (bombSpawned === false) {
+    var r = Math.floor(Math.random() * 10);
+    if (r <= 2) {
+      rings[laneIndex * 3 + r].visible = false;
+      bomb.visible = true;
+      bomb.position.x = rings[laneIndex * 3 + r].position.x;
+      bomb.position.y = rings[laneIndex * 3 + r].position.y;
+      bomb.position.z = rings[laneIndex * 3 + r].position.z;
+      bombSpawned = true;
+    }
   }
 }
+let laneSpeed = 0.1;
 function moveLanes() {
-  ringParent.position.z += 0.1;
+  ringParent.position.z += laneSpeed;
   var wpVector = new THREE.Vector3();
   for (var i = 0; i < rings.length; i += 3) {
     rings[i].getWorldPosition(wpVector);
@@ -152,6 +172,7 @@ function moveLanes() {
         rings[i + 2].visible === true
       ) {
         lives--;
+        laneSpeed = clamp(laneSpeed - 0.06, 0.1, 0.3);
         screenShake.shake(camera, new THREE.Vector3(0.1, 0, 0), 300);
         console.log("lost life! " + lives);
         if (lives <= 0 && currentState === states.PLAY) die();
@@ -167,6 +188,21 @@ function moveLanes() {
       if (wpVector.distanceTo(birdBody.position) < 0.5) collectRing(i);
     }
   }
+  if (bombSpawned) {
+    wpVector = bomb.getWorldPosition(wpVector);
+    if (wpVector.distanceTo(birdBody.position) < 0.5) detonateBomb();
+    else if (wpVector.z > 6) {
+      bomb.visible = false;
+      bombSpawned = false;
+    }
+  }
+}
+function detonateBomb() {
+  lives = 0;
+  bomb.visible = false;
+  bombSpawned = false;
+  screenShake.shake(camera, new THREE.Vector3(0.1, 0, 0), 300);
+  if (lives <= 0 && currentState === states.PLAY) die();
 }
 function collectRing(ring) {
   score++;
@@ -199,6 +235,7 @@ function updateForFrame() {
 
 function doFrame() {
   frameNumber++;
+  laneSpeed = clamp(laneSpeed + laneSpeed * 0.001, 0.1, 0.3);
   if (bird != null) updateForFrame();
 
   updateScene();
@@ -466,6 +503,7 @@ function die() {
   scoreHudEl.style.display = "none";
   gameOverEl.style.display = "";
   scoreEl.innerHTML = score;
+  laneSpeed = 0.1;
 
   // play the dead sound
   new Audio("./Assets/hit.mp3").play();
