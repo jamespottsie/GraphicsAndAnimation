@@ -99,7 +99,7 @@ function createWorld() {
 
   var loader = new THREE.GLTFLoader();
 
-  loader.load("/Assets/bird.gltf", function (gltf) {
+  loader.load("Assets/bird.gltf", function (gltf) {
     bird = gltf.scene;
     scene.add(gltf.scene);
     bird.rotation.y = 3.14;
