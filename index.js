@@ -564,16 +564,7 @@ window.addEventListener("keyup", function (e) {
 });
 //#endregion
 
-//#region BIRD CONTROLS
-var ySpeed = 0;
-
 function flapBird(flapSpeed) {
-  if (flapSpeed < 0) {
-    if (ySpeed > -0.45) ySpeed += flapSpeed;
-  } else {
-    ySpeed = flapSpeed;
-  }
-  //bird.position.y += 0.04 * ySpeed;
   birdBody.velocity.y = flapSpeed;
 }
 
