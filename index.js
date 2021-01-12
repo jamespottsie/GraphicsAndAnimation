@@ -7,7 +7,15 @@ let bombSpawned = false;
 let bomb;
 let world;
 const timeStep = 1.0 / 60.0;
-let frameNumber;
+let frameNumber = 0;
+
+let kinectron;
+let numJsonFrames = 0;
+let jsonMotion = null;
+let kinectronIpAddress = "192.168.1.140";
+
+let meshRH;
+let meshLH;
 
 let flap = false;
 let turnAmount = 0.0;
@@ -53,6 +61,7 @@ let gameOverEl;
 let smokeGeometry;
 let smokeMaterial;
 let smokeParticles;
+let pcControls = false;
 
 //#region WORLD SETUP
 function createWorld() {
@@ -91,6 +100,21 @@ function createWorld() {
     scene.add(gltf.scene);
     bird.rotation.y = 3.14;
   });
+
+  ringParent = new THREE.Group();
+  ringParent.position.z = -2;
+  scene.add(ringParent);
+  //leftHandBall
+  var gLH = new THREE.SphereGeometry(0.1, 18, 18);
+  var mLH = new THREE.MeshPhongMaterial({ color: 0xcccccc });
+  meshLH = new THREE.Mesh(gLH, mLH);
+  ringParent.add(meshLH);
+
+  //rightHandBall
+  var gRH = new THREE.SphereGeometry(0.1, 18, 18);
+  var mRH = new THREE.MeshPhongMaterial({ color: 0x00cccc });
+  meshRH = new THREE.Mesh(gRH, mRH);
+  ringParent.add(meshRH);
 
   ringParent = new THREE.Group();
   ringParent.position.z = 0;
@@ -221,8 +245,32 @@ function updateForFrame() {
   birdBody.position.z = 0;
 }
 
+let lastLeftHandPos;
+let lastRightHandPos;
 function doFrame() {
   frameNumber++;
+
+  if (numJsonFrames > 0) {
+    getBodies(jsonMotion[frameNumber % numJsonFrames]);
+  }
+
+  if (pcControls === false) {
+    turnAmount = meshLH.position.y - meshRH.position.y;
+    var lDiff = meshLH.position.y - lastLeftHandPos;
+    var rDiff = meshRH.position.y - lastRightHandPos;
+    flapSpeed = -2 * (lDiff + rDiff);
+    flap = flapSpeed > 0.3;
+
+    // default = -1.2
+  }
+  world.gravity.y = clamp(
+    -2 + (meshRH.position.x - meshLH.position.x),
+    -0.2,
+    -2.5
+  );
+  lastLeftHandPos = meshLH.position.y;
+  lastRightHandPos = meshRH.position.y;
+
   laneSpeed = clamp(laneSpeed + laneSpeed * 0.001, 0.1, 0.3);
   if (bird != null) updateForFrame();
 
@@ -529,12 +577,36 @@ function GroundTexture() {
 
   return canvas;
 }
+//#region KINECTRON Controls
+function readTextFile(file, callback) {
+  var rawFile = new XMLHttpRequest();
+  rawFile.overrideMimeType("application/json");
+  rawFile.open("GET", file, true);
+  rawFile.onreadystatechange = function () {
+    if (rawFile.readyState === 4) {
+      callback(rawFile.responseText);
+    }
+  };
+  rawFile.send(null);
+}
+
+function getBodies(skeletonFrame) {
+  meshLH.position.x = skeletonFrame.joints[kinectron.HANDLEFT].cameraX;
+  meshLH.position.y = skeletonFrame.joints[kinectron.HANDLEFT].cameraY;
+  meshLH.position.z = skeletonFrame.joints[kinectron.HANDLEFT].cameraZ;
+  meshRH.position.x = skeletonFrame.joints[kinectron.HANDRIGHT].cameraX;
+  meshRH.position.y = skeletonFrame.joints[kinectron.HANDRIGHT].cameraY;
+  meshRH.position.z = skeletonFrame.joints[kinectron.HANDRIGHT].cameraZ;
+}
+
+//#endregion
 
 //#region PC CONTROLS
 window.addEventListener("keydown", function (e) {
   if (e.keyCode === null) return;
   switch (e.keyCode) {
     case 32:
+      pcControls = true;
       flap = true;
       break;
     case 65:
@@ -542,6 +614,33 @@ window.addEventListener("keydown", function (e) {
       break;
     case 68:
       turnAmount = 1.0;
+      break;
+    case 73:
+      // Read the JSON file motion.json
+      pcControls = false;
+      readTextFile("RecordedJSON/Flying01.json", function (text) {
+        jsonMotion = JSON.parse(text);
+        numJsonFrames = Object.keys(jsonMotion).length;
+        console.log("Total Frame = " + numJsonFrames);
+      });
+      break;
+    case 79:
+      // Read the JSON file motion.json
+      pcControls = false;
+      readTextFile("RecordedJSON/ArmRaise.json", function (text) {
+        jsonMotion = JSON.parse(text);
+        numJsonFrames = Object.keys(jsonMotion).length;
+        console.log("Total Frame = " + numJsonFrames);
+      });
+      break;
+    case 85:
+      // Read the JSON file motion.json
+      pcControls = false;
+      readTextFile("RecordedJSON/Flying03.json", function (text) {
+        jsonMotion = JSON.parse(text);
+        numJsonFrames = Object.keys(jsonMotion).length;
+        console.log("Total Frame = " + numJsonFrames);
+      });
       break;
   }
   e.preventDefault();
@@ -609,6 +708,8 @@ function init() {
     return;
   }
   createWorld();
+  kinectron = new Kinectron();
+
   doFrame();
 }
 //#endregion
