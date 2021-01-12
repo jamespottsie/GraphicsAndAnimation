@@ -8,6 +8,7 @@ let bomb;
 let world;
 const timeStep = 1.0 / 60.0;
 let frameNumber = 0;
+let livesEnabled = true;
 
 let kinectron;
 let numJsonFrames = 0;
@@ -288,9 +289,10 @@ function updateScene() {
     groundTexture.offset.y += 0.02;
   }
 
-  scoreHudEl.innerHTML =
-    "<center>" + score + "<br>" + "<3".repeat(lives) + "</center>";
-
+  if (lives > 0)
+    scoreHudEl.innerHTML =
+      "<center>" + score + "<br>" + "<3".repeat(lives) + "</center>";
+  else scoreHudEl.innerHTML = "";
   const objectMoveSpeed = 0.05;
 
   // updates the smoke particles
@@ -534,29 +536,31 @@ function createScene() {
 
 function die() {
   // update the ui
-  dead = true;
-  currentState = states.SCORE;
-  scoreHudEl.style.display = "none";
-  gameOverEl.style.display = "";
-  scoreEl.innerHTML = score;
-  laneSpeed = 0.1;
-  ringParent.position.z -= 15;
-  // play the dead sound
-  new Audio("./Assets/hit.mp3").play();
+  if (livesEnabled === true) {
+    dead = true;
+    currentState = states.SCORE;
+    scoreHudEl.style.display = "none";
+    gameOverEl.style.display = "";
+    scoreEl.innerHTML = score;
+    laneSpeed = 0.1;
+    ringParent.position.z -= 15;
+    // play the dead sound
+    new Audio("./Assets/hit.mp3").play();
 
-  // all some random smoke particles
-  smokeParticles.position.copy(birdBody.position);
+    // all some random smoke particles
+    smokeParticles.position.copy(birdBody.position);
 
-  for (let i = 0; i < SMOKE_PARTICLE_COUNT; i++) {
-    const mesh = new THREE.Mesh(smokeGeometry, smokeMaterial);
-    mesh.scale.setScalar(Math.random() * 0.1);
-    mesh.position.set(
-      Math.random() - 0.5,
-      Math.random() - 0.5,
-      Math.random() - 0.5
-    );
-    mesh.position.multiplyScalar(0.3);
-    smokeParticles.add(mesh);
+    for (let i = 0; i < SMOKE_PARTICLE_COUNT; i++) {
+      const mesh = new THREE.Mesh(smokeGeometry, smokeMaterial);
+      mesh.scale.setScalar(Math.random() * 0.1);
+      mesh.position.set(
+        Math.random() - 0.5,
+        Math.random() - 0.5,
+        Math.random() - 0.5
+      );
+      mesh.position.multiplyScalar(0.3);
+      smokeParticles.add(mesh);
+    }
   }
 }
 
@@ -641,6 +645,11 @@ window.addEventListener("keydown", function (e) {
         numJsonFrames = Object.keys(jsonMotion).length;
         console.log("Total Frame = " + numJsonFrames);
       });
+      break;
+    case 191:
+      livesEnabled = !livesEnabled;
+      if (livesEnabled === true) lives = 3;
+      else lives = 0;
       break;
   }
   e.preventDefault();
